@@ -93,8 +93,4 @@ function validatePhoneInput(input) {
         /^\d{3}-\d{2}-\d{2}$/.test(input.trim()) // Matches XXX-XX-XX
     );
 }
-// node ./src/dist/index.js -a list
-// node ./src/dist/index.js -a get -i 05olLMgyVQdWRwgKfg5J6
-// node ./src/dist/index.js -a add -n Mango -e mango@gmail.com -p 322-22-22
-// node ./src/dist/index.js -a remove -i qdggE76Jtbfd9eWJHrssH
 //# sourceMappingURL=contacts.js.map
