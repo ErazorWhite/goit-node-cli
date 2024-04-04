@@ -2,98 +2,67 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { nanoid } from "nanoid";
 import colors from "colors";
+import type {
+  Contact,
+  ListContacts,
+  ContactIdOperation,
+  AddContact,
+} from "./interfaces/Contact";
 
 const contactsPath: string = path.resolve("src", "db", "contacts.json");
 
-type Contact = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-};
-
-export async function listContacts(): Promise<Contact[] | null> {
+export const listContacts: ListContacts = async () => {
   try {
     const readResult = await fs.readFile(contactsPath, { encoding: "utf-8" });
     return JSON.parse(readResult);
   } catch (error) {
-    console.log(colors.red("Error:"), error.message);
+    console.error(colors.red("Error:"), error.message);
     return null;
   }
-}
+};
 
-export async function getContactById(
-  contactId: string
-): Promise<Contact | null> {
+export const getContactById: ContactIdOperation = async (contactId) => {
   try {
     const contacts = await listContacts();
     const requiredContact = contacts?.find(
       (contact) => contact.id === contactId
     );
-    if (!requiredContact) {
-      console.log(colors.red("There is no such contact, check provided ID"));
-      return null;
-    }
-    return requiredContact;
+    return requiredContact || null;
   } catch (error) {
-    console.log(colors.red("Error:"), error.message);
+    console.error(colors.red("Error:"), error.message);
     return null;
   }
-}
+};
 
-export async function removeContact(
-  contactId: string
-): Promise<Contact | null> {
+export const removeContact: ContactIdOperation = async (contactId) => {
   try {
     const contacts = await listContacts();
-    if (!contacts) {
-      console.log(colors.red("There are no contacts!"));
-      return null;
-    }
+    if (!contacts) return null;
     const index =
       contacts?.findIndex((contact) => contact.id === contactId) || -1;
-    if (index === -1) {
-      console.log(colors.red("There is no such contact, check provided ID"));
-      return null;
-    }
+    if (index === -1) return null;
     const [removedContact] = contacts.splice(index, 1);
     await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-    console.log(colors.green("File successfully saved."));
     return removedContact;
   } catch (error) {
-    console.log(colors.red("Error:"), error.message);
+    console.error(colors.red("Error:"), error.message);
     return null;
   }
-}
+};
 
-export async function addContact(
-  name: string,
-  email: string,
-  phone: string
-): Promise<Contact | null> {
-  if (!name || !email || !phone) {
-    console.log(colors.red("All fields (name, email, phone) are required."));
+export const addContact: AddContact = async ({ name, email, phone }) => {
+  if (
+    !name ||
+    !email ||
+    !phone ||
+    !validateEmail(email) ||
+    !validatePhoneInput(phone)
+  )
     return null;
-  }
-  if (!validateEmail(email)) {
-    console.log(
-      colors.red(`Provided email: ${email} is wrong. Please try again.`)
-    );
-    return null;
-  }
-
-  console.log(`Validating phone number: ${phone}`);
-  const isValidPhone = validatePhoneInput(phone);
-  console.log(`Phone validation result for ${phone}: ${isValidPhone}`);
-  if (!isValidPhone) {
-    console.log(
-      colors.red(`Provided phone number: ${phone} is wrong. Please try again.`)
-    );
-    return null;
-  }
 
   try {
-    const contacts = (await listContacts()) || [];
+    const contacts = await listContacts();
+    if (!contacts) return null;
     const newContact: Contact = {
       id: nanoid(),
       name,
@@ -102,13 +71,12 @@ export async function addContact(
     };
     contacts.push(newContact);
     await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-    console.log(colors.green("File successfully saved."));
     return newContact;
   } catch (error) {
-    console.log(colors.red("Error:"), error.message);
+    console.error(colors.red("Error:"), error.message);
     return null;
   }
-}
+};
 
 function validateEmail(email: string): boolean {
   const re =
