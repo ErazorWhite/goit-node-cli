@@ -7,7 +7,7 @@ import type {
   ListContacts,
   ContactIdOperation,
   AddContact,
-} from "./interfaces/Contact";
+} from "./types/Contact";
 
 const contactsPath: string = path.resolve("src", "db", "contacts.json");
 
